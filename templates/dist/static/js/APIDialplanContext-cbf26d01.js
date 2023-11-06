@@ -1,0 +1,1 @@
+import{aC as a}from"./index-8391854f.js";const o=()=>a.request("get","/api?action=GetDialplanContextNames"),s=t=>a.request("post",`/api?action=GetDialplanContextInfos&name=${t}`),r=(t,e)=>a.request("post",`/api?action=SetDialplanContextInfo&name=${t}`,{data:e}),l=t=>a.request("post",`/api?action=DelDialplanContexts&name=${t}`);export{s as a,r as b,l as c,o as r};

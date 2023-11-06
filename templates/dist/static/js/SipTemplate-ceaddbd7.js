@@ -1,0 +1,1 @@
+import{aC as t}from"./index-8391854f.js";const p=e=>t.request("post","/api?action=GetTemplateInfos&name=SipTemplate",{}),r=e=>t.request("post","/api?action=SetTemplateInfo&name=SipTemplate",{data:{name:"root",children:e}});export{p as a,r};
