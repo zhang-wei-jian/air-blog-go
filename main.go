@@ -29,9 +29,9 @@ func main() {
 
 	systemLog.CpuLog()
 
-	println("运行在了 http://localhost:8899")
+	println("运行在了 http://localhost:8898")
 
-	r.Run(":8899")
+	r.Run(":8898")
 
 }
 
