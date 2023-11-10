@@ -21,6 +21,7 @@ type Catalog struct {
 		Square string `json:"square" gorm:"column:cover_square"`
 		Alt    string `json:"alt" gorm:"column:cover_alt"`
 	} `json:"cover" gorm:"embedded"`
+	Content string `json:"content" gorm:"column:content"`
 }
 
 // Value 实现方法

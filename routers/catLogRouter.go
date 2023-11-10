@@ -18,6 +18,18 @@ func CatLogRouter(r *gin.Engine) {
 	catLogRouter := r.Group("/catlog")
 	{
 		catLogRouter.GET("", func(c *gin.Context) {
+
+			id := c.Query("id")
+
+			if id != "" {
+				catlog := models.Catalog{}
+				models.DB.First(&catlog, id)
+
+				c.JSON(200, catlog)
+				return
+
+			}
+
 			catlog := []models.Catalog{}
 			models.DB.Find(&catlog)
 			c.JSON(200, catlog)
