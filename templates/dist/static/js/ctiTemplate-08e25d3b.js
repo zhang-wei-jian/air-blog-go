@@ -1,1 +1,0 @@
-import{aC as e}from"./index-8391854f.js";const r=t=>e.request("post","/api?action=GetTemplateInfos&name=CtiTemplate",{}),n=t=>e.request("post","/api?action=SetTemplateInfo&name=CtiTemplate",{data:{name:"root",children:t}});export{n as a,r};

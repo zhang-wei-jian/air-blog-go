@@ -1,1 +1,0 @@
-import{d as e,c as o,g as n,o as t}from"./index-8391854f.js";const s=n("h1",null,"欢迎使用顶顶通呼叫中心中间件管理系统",-1),a=[s],d=e({name:"Welcome",__name:"index",setup(c){return(_,r)=>(t(),o("div",null,a))}});export{d as default};

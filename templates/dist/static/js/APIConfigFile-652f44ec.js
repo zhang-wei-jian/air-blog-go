@@ -1,1 +1,0 @@
-import{aC as t}from"./index-8391854f.js";const i=()=>t.request("get","/api?action=GetConfigFileNames"),a=e=>t.request("post",`/api?action=GetConfigFileInfos&name=${e}`),s=(e,n)=>t.request("post",`/api?action=SetConfigFileInfo&name=${e}`,{data:n}),r=e=>t.request("post",`/api?action=DelConfigFiles&name=${e}`);export{a,s as b,r as c,i as r};

@@ -20,6 +20,7 @@ func main() {
 	r := gin.Default()
 
 	r.Use(routers.CORSMiddleware())
+	// r.Use(cors.Default())
 
 	routers.DefaultRouter(r)
 	routers.UserRouter(r)
