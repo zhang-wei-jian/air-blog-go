@@ -1,10 +1,722 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>wealcome</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>博客后台管理</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✍️</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        [v-cloak] { display: none; }
+        .fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
+        .fade-enter-from, .fade-leave-to { opacity: 0; }
+        .slide-enter-active, .slide-leave-active { transition: transform 0.3s ease, opacity 0.3s ease; }
+        .slide-enter-from { transform: translateY(20px); opacity: 0; }
+        .slide-leave-to { transform: translateY(-20px); opacity: 0; }
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .card-hover { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .btn-primary:hover { background: linear-gradient(135deg, #5a6fd6 0%, #6a4192 100%); transform: translateY(-1px); }
+        .tag { transition: all 0.2s ease; }
+        .tag:hover { transform: scale(1.05); }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        .modal-overlay { backdrop-filter: blur(4px); }
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    </style>
 </head>
-<body>
+<body class="bg-gray-50 min-h-screen">
+    <div id="app" v-cloak>
+        <!-- Header -->
+        <header class="gradient-bg text-white shadow-lg sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                            <i class="ri-quill-pen-line text-xl"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold">Blog Admin</h1>
+                            <p class="text-xs text-white/70">内容管理系统</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="relative">
+                            <input 
+                                v-model="searchQuery"
+                                type="text" 
+                                placeholder="搜索文章..." 
+                                class="w-64 px-4 py-2 pl-10 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:bg-white/30 focus:border-white/50 transition-all"
+                            >
+                            <i class="ri-search-line absolute left-3 top-1/2 -translate-y-1/2 text-white/60"></i>
+                        </div>
+                        <button 
+                            @click="openModal()"
+                            class="flex items-center space-x-2 bg-white text-purple-600 px-4 py-2 rounded-xl font-medium hover:bg-white/90 transition-all hover:shadow-lg"
+                        >
+                            <i class="ri-add-line"></i>
+                            <span>新建文章</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
 
+        <!-- Stats Cards -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="glass rounded-2xl p-5 shadow-sm border border-white/50 card-hover">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500">总文章数</p>
+                            <p class="text-2xl font-bold text-gray-800">[[ blogs.length ]]</p>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                            <i class="ri-file-text-line text-blue-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass rounded-2xl p-5 shadow-sm border border-white/50 card-hover">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500">精选文章</p>
+                            <p class="text-2xl font-bold text-gray-800">[[ blogs.filter(b => b.featured).length ]]</p>
+                        </div>
+                        <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
+                            <i class="ri-star-line text-amber-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass rounded-2xl p-5 shadow-sm border border-white/50 card-hover">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500">作者数量</p>
+                            <p class="text-2xl font-bold text-gray-800">[[ uniqueAuthors ]]</p>
+                        </div>
+                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                            <i class="ri-user-line text-green-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass rounded-2xl p-5 shadow-sm border border-white/50 card-hover">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500">标签总数</p>
+                            <p class="text-2xl font-bold text-gray-800">[[ uniqueTags ]]</p>
+                        </div>
+                        <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                            <i class="ri-hashtag text-purple-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Filter Tabs -->
+            <div class="flex items-center space-x-2 mb-6">
+                <button 
+                    @click="filter = 'all'"
+                    :class="filter === 'all' ? 'bg-purple-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'"
+                    class="px-4 py-2 rounded-xl text-sm font-medium transition-all"
+                >
+                    全部
+                </button>
+                <button 
+                    @click="filter = 'featured'"
+                    :class="filter === 'featured' ? 'bg-purple-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'"
+                    class="px-4 py-2 rounded-xl text-sm font-medium transition-all"
+                >
+                    <i class="ri-star-line mr-1"></i>精选
+                </button>
+                <div class="flex-1"></div>
+                <select 
+                    v-model="sortBy"
+                    class="bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm text-gray-600 focus:outline-none focus:border-purple-400"
+                >
+                    <option value="newest">最新发布</option>
+                    <option value="oldest">最早发布</option>
+                    <option value="title">按标题</option>
+                </select>
+            </div>
+
+            <!-- Loading State -->
+            <div v-if="loading" class="flex items-center justify-center py-20">
+                <div class="animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent"></div>
+            </div>
+
+            <!-- Empty State -->
+            <div v-else-if="filteredBlogs.length === 0" class="text-center py-20">
+                <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="ri-article-line text-4xl text-gray-400"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-600 mb-2">暂无文章</h3>
+                <p class="text-gray-400 mb-6">点击右上角的"新建文章"开始创作</p>
+                <button 
+                    @click="openModal()"
+                    class="btn-primary text-white px-6 py-3 rounded-xl font-medium transition-all"
+                >
+                    <i class="ri-add-line mr-2"></i>创建第一篇文章
+                </button>
+            </div>
+
+            <!-- Blog Grid -->
+            <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div 
+                    v-for="blog in filteredBlogs" 
+                    :key="blog.id"
+                    class="glass rounded-2xl overflow-hidden shadow-sm border border-white/50 card-hover group"
+                >
+                    <!-- Cover Image -->
+                    <div class="relative h-48 bg-gradient-to-br from-purple-400 to-blue-500 overflow-hidden">
+                        <img 
+                            v-if="blog.cover?.url" 
+                            :src="blog.cover.url" 
+                            :alt="blog.cover.alt || blog.title"
+                            class="w-full h-full object-cover"
+                            @error="$event.target.style.display='none'"
+                        >
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                        <div class="absolute top-3 right-3 flex space-x-2">
+                            <span 
+                                v-if="blog.featured"
+                                class="bg-amber-500 text-white text-xs px-2 py-1 rounded-lg flex items-center"
+                            >
+                                <i class="ri-star-fill mr-1"></i>精选
+                            </span>
+                            <span 
+                                v-if="blog.theme"
+                                class="bg-white/90 text-gray-700 text-xs px-2 py-1 rounded-lg"
+                            >
+                                [[ blog.theme ]]
+                            </span>
+                        </div>
+                        <div class="absolute bottom-3 left-3 right-3">
+                            <h3 class="text-white font-bold text-lg line-clamp-2">[[ blog.title ]]</h3>
+                        </div>
+                    </div>
+                    
+                    <!-- Content -->
+                    <div class="p-5">
+                        <p class="text-gray-500 text-sm line-clamp-2 mb-4">[[ blog.description || '暂无描述' ]]</p>
+                        
+                        <!-- Tags -->
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span 
+                                v-for="tag in (blog.tags || [])" 
+                                :key="tag"
+                                class="tag bg-purple-50 text-purple-600 text-xs px-2.5 py-1 rounded-lg"
+                            >
+                                #[[ tag ]]
+                            </span>
+                        </div>
+                        
+                        <!-- Footer -->
+                        <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-7 h-7 bg-gradient-to-br from-purple-400 to-blue-500 rounded-full flex items-center justify-center">
+                                    <span class="text-white text-xs font-medium">[[ (blog.author || 'A')[0] ]]</span>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-medium text-gray-700">[[ blog.author || '匿名' ]]</p>
+                                    <p class="text-xs text-gray-400">[[ formatDate(blog.pubDate) ]]</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button 
+                                    @click="openModal(blog)"
+                                    class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                    title="编辑"
+                                >
+                                    <i class="ri-edit-line"></i>
+                                </button>
+                                <button 
+                                    @click="confirmDelete(blog)"
+                                    class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                    title="删除"
+                                >
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal -->
+        <transition name="fade">
+            <div 
+                v-if="showModal"
+                class="fixed inset-0 bg-black/50 modal-overlay flex items-center justify-center z-50 p-4"
+                @click.self="closeModal()"
+            >
+                <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl">
+                    <!-- Modal Header -->
+                    <div class="gradient-bg text-white px-6 py-4 flex items-center justify-between">
+                        <h2 class="text-lg font-bold">[[ editingBlog ? '编辑文章' : '新建文章' ]]</h2>
+                        <button @click="closeModal()" class="p-2 hover:bg-white/20 rounded-lg transition-all">
+                            <i class="ri-close-line text-xl"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Modal Body -->
+                    <div class="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+                        <div class="space-y-5">
+                            <!-- Title -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">文章标题 *</label>
+                                <input 
+                                    v-model="form.title"
+                                    type="text" 
+                                    placeholder="请输入文章标题"
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition-all"
+                                >
+                            </div>
+                            
+                            <!-- Description -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">文章描述</label>
+                                <textarea 
+                                    v-model="form.description"
+                                    rows="3"
+                                    placeholder="简短描述文章内容..."
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition-all resize-none"
+                                ></textarea>
+                            </div>
+                            
+                            <!-- Author & Theme -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">作者</label>
+                                    <input 
+                                        v-model="form.author"
+                                        type="text" 
+                                        placeholder="作者名称"
+                                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition-all"
+                                    >
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">主题分类</label>
+                                    <input 
+                                        v-model="form.theme"
+                                        type="text" 
+                                        placeholder="如：技术、生活、随笔"
+                                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition-all"
+                                    >
+                                </div>
+                            </div>
+                            
+                            <!-- Tags -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">标签</label>
+                                <div class="flex items-center space-x-2">
+                                    <input 
+                                        v-model="tagInput"
+                                        type="text" 
+                                        placeholder="输入标签后按回车"
+                                        @keydown.enter.prevent="addTag()"
+                                        class="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition-all"
+                                    >
+                                    <button 
+                                        @click="addTag()"
+                                        class="px-4 py-3 bg-purple-100 text-purple-600 rounded-xl hover:bg-purple-200 transition-all"
+                                    >
+                                        <i class="ri-add-line"></i>
+                                    </button>
+                                </div>
+                                <div class="flex flex-wrap gap-2 mt-3">
+                                    <span 
+                                        v-for="(tag, index) in form.tags" 
+                                        :key="index"
+                                        class="flex items-center space-x-1 bg-purple-50 text-purple-600 px-3 py-1.5 rounded-lg text-sm"
+                                    >
+                                        <span>#[[ tag ]]</span>
+                                        <button @click="removeTag(index)" class="hover:text-purple-800">
+                                            <i class="ri-close-line"></i>
+                                        </button>
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <!-- Cover URL -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">封面图片</label>
+                                <input 
+                                    v-model="form.cover.url"
+                                    type="text" 
+                                    placeholder="https://example.com/image.jpg"
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition-all"
+                                >
+                            </div>
+                            
+                            <!-- Content -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">文章内容</label>
+                                <textarea 
+                                    v-model="form.content"
+                                    rows="8"
+                                    placeholder="请输入文章内容..."
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition-all resize-none"
+                                ></textarea>
+                            </div>
+                            
+                            <!-- Featured Toggle -->
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                                <div>
+                                    <p class="font-medium text-gray-700">设为精选文章</p>
+                                    <p class="text-sm text-gray-400">精选文章会在首页突出展示</p>
+                                </div>
+                                <button 
+                                    @click="form.featured = !form.featured"
+                                    :class="form.featured ? 'bg-purple-600' : 'bg-gray-300'"
+                                    class="relative w-12 h-7 rounded-full transition-all"
+                                >
+                                    <span 
+                                        :class="form.featured ? 'translate-x-6' : 'translate-x-1'"
+                                        class="absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-transform"
+                                    ></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Modal Footer -->
+                    <div class="px-6 py-4 bg-gray-50 border-t flex items-center justify-end space-x-3">
+                        <button 
+                            @click="closeModal()"
+                            class="px-6 py-2.5 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-100 transition-all"
+                        >
+                            取消
+                        </button>
+                        <button 
+                            @click="saveBlog()"
+                            :disabled="saving"
+                            class="btn-primary text-white px-6 py-2.5 rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <span v-if="saving" class="flex items-center">
+                                <i class="ri-loader-4-line animate-spin mr-2"></i>保存中...
+                            </span>
+                            <span v-else>[[ editingBlog ? '保存修改' : '发布文章' ]]</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
+        <!-- Delete Confirm Modal -->
+        <transition name="fade">
+            <div 
+                v-if="showDeleteConfirm"
+                class="fixed inset-0 bg-black/50 modal-overlay flex items-center justify-center z-50 p-4"
+                @click.self="showDeleteConfirm = false"
+            >
+                <div class="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl">
+                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="ri-error-warning-line text-3xl text-red-500"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-center text-gray-800 mb-2">确认删除</h3>
+                    <p class="text-gray-500 text-center mb-6">
+                        确定要删除文章「[[ deletingBlog?.title ]]」吗？此操作不可撤销。
+                    </p>
+                    <div class="flex items-center justify-center space-x-3">
+                        <button 
+                            @click="showDeleteConfirm = false"
+                            class="px-6 py-2.5 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-100 transition-all"
+                        >
+                            取消
+                        </button>
+                        <button 
+                            @click="deleteBlog()"
+                            :disabled="deleting"
+                            class="px-6 py-2.5 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all disabled:opacity-50"
+                        >
+                            <span v-if="deleting">删除中...</span>
+                            <span v-else>确认删除</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
+        <!-- Toast Notification -->
+        <transition name="slide">
+            <div 
+                v-if="toast.show"
+                class="fixed bottom-6 right-6 z-50"
+            >
+                <div 
+                    :class="{
+                        'bg-green-500': toast.type === 'success',
+                        'bg-red-500': toast.type === 'error',
+                        'bg-blue-500': toast.type === 'info'
+                    }"
+                    class="text-white px-6 py-3 rounded-xl shadow-lg flex items-center space-x-2"
+                >
+                    <i :class="{
+                        'ri-check-line': toast.type === 'success',
+                        'ri-close-circle-line': toast.type === 'error',
+                        'ri-information-line': toast.type === 'info'
+                    }"></i>
+                    <span>[[ toast.message ]]</span>
+                </div>
+            </div>
+        </transition>
+    </div>
+
+    <script>
+        const { createApp, ref, computed, onMounted } = Vue;
+
+        createApp({
+            compilerOptions: {
+                delimiters: ['[[', ']]'],
+                comments: true
+            },
+            setup() {
+                const blogs = ref([]);
+                const loading = ref(true);
+                const showModal = ref(false);
+                const editingBlog = ref(null);
+                const saving = ref(false);
+                const searchQuery = ref('');
+                const filter = ref('all');
+                const sortBy = ref('newest');
+                const tagInput = ref('');
+                const showDeleteConfirm = ref(false);
+                const deletingBlog = ref(null);
+                const deleting = ref(false);
+                
+                const toast = ref({ show: false, message: '', type: 'success' });
+                
+                const defaultForm = {
+                    title: '',
+                    description: '',
+                    author: '',
+                    theme: '',
+                    tags: [],
+                    featured: false,
+                    cover: { url: '', square: '', alt: '' },
+                    content: '',
+                    pubDate: ''
+                };
+                
+                const form = ref({ ...defaultForm });
+
+                const uniqueAuthors = computed(() => {
+                    return new Set(blogs.value.map(b => b.author).filter(Boolean)).size;
+                });
+
+                const uniqueTags = computed(() => {
+                    const tags = new Set();
+                    blogs.value.forEach(b => (b.tags || []).forEach(t => tags.add(t)));
+                    return tags.size;
+                });
+
+                const filteredBlogs = computed(() => {
+                    let result = [...blogs.value];
+                    
+                    if (filter.value === 'featured') {
+                        result = result.filter(b => b.featured);
+                    }
+                    
+                    if (searchQuery.value) {
+                        const query = searchQuery.value.toLowerCase();
+                        result = result.filter(b => 
+                            (b.title || '').toLowerCase().includes(query) ||
+                            (b.description || '').toLowerCase().includes(query) ||
+                            (b.author || '').toLowerCase().includes(query)
+                        );
+                    }
+                    
+                    if (sortBy.value === 'newest') {
+                        result.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+                    } else if (sortBy.value === 'oldest') {
+                        result.sort((a, b) => new Date(a.pubDate) - new Date(b.pubDate));
+                    } else if (sortBy.value === 'title') {
+                        result.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+                    }
+                    
+                    return result;
+                });
+
+                const showToast = (message, type = 'success') => {
+                    toast.value = { show: true, message, type };
+                    setTimeout(() => toast.value.show = false, 3000);
+                };
+
+                const fetchBlogs = async () => {
+                    loading.value = true;
+                    try {
+                        const res = await fetch('/catlog');
+                        if (res.ok) {
+                            blogs.value = await res.json();
+                        }
+                    } catch (e) {
+                        showToast('加载失败: ' + e.message, 'error');
+                    } finally {
+                        loading.value = false;
+                    }
+                };
+
+                const openModal = (blog = null) => {
+                    if (blog) {
+                        editingBlog.value = blog;
+                        form.value = {
+                            ...blog,
+                            tags: [...(blog.tags || [])],
+                            cover: { ...(blog.cover || { url: '', square: '', alt: '' }) }
+                        };
+                    } else {
+                        editingBlog.value = null;
+                        form.value = { ...defaultForm, tags: [], cover: { url: '', square: '', alt: '' } };
+                    }
+                    tagInput.value = '';
+                    showModal.value = true;
+                };
+
+                const closeModal = () => {
+                    showModal.value = false;
+                    editingBlog.value = null;
+                };
+
+                const addTag = () => {
+                    const tag = tagInput.value.trim();
+                    if (tag && !form.value.tags.includes(tag)) {
+                        form.value.tags.push(tag);
+                    }
+                    tagInput.value = '';
+                };
+
+                const removeTag = (index) => {
+                    form.value.tags.splice(index, 1);
+                };
+
+                const saveBlog = async () => {
+                    if (!form.value.title.trim()) {
+                        showToast('请输入文章标题', 'error');
+                        return;
+                    }
+                    
+                    saving.value = true;
+                    try {
+                        const payload = {
+                            ...form.value,
+                            pubDate: form.value.pubDate || new Date().toISOString()
+                        };
+                        
+                        let res;
+                        if (editingBlog.value) {
+                            res = await fetch(`/catlog?id=${editingBlog.value.id}`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(payload)
+                            });
+                        } else {
+                            res = await fetch('/catlog', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(payload)
+                            });
+                        }
+                        
+                        if (res.ok) {
+                            showToast(editingBlog.value ? '文章已更新' : '文章已发布');
+                            closeModal();
+                            await fetchBlogs();
+                        } else {
+                            const err = await res.json();
+                            showToast(err.error || '保存失败', 'error');
+                        }
+                    } catch (e) {
+                        showToast('保存失败: ' + e.message, 'error');
+                    } finally {
+                        saving.value = false;
+                    }
+                };
+
+                const confirmDelete = (blog) => {
+                    deletingBlog.value = blog;
+                    showDeleteConfirm.value = true;
+                };
+
+                const deleteBlog = async () => {
+                    deleting.value = true;
+                    try {
+                        const res = await fetch(`/catlog?id=${deletingBlog.value.id}`, {
+                            method: 'DELETE'
+                        });
+                        if (res.ok) {
+                            showToast('文章已删除');
+                            showDeleteConfirm.value = false;
+                            await fetchBlogs();
+                        } else {
+                            showToast('删除失败', 'error');
+                        }
+                    } catch (e) {
+                        showToast('删除失败: ' + e.message, 'error');
+                    } finally {
+                        deleting.value = false;
+                    }
+                };
+
+                const formatDate = (dateStr) => {
+                    if (!dateStr) return '未知日期';
+                    try {
+                        const date = new Date(dateStr);
+                        return date.toLocaleDateString('zh-CN', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                        });
+                    } catch {
+                        return dateStr;
+                    }
+                };
+
+                onMounted(fetchBlogs);
+
+                return {
+                    blogs,
+                    loading,
+                    showModal,
+                    editingBlog,
+                    saving,
+                    searchQuery,
+                    filter,
+                    sortBy,
+                    tagInput,
+                    form,
+                    toast,
+                    showDeleteConfirm,
+                    deletingBlog,
+                    deleting,
+                    uniqueAuthors,
+                    uniqueTags,
+                    filteredBlogs,
+                    openModal,
+                    closeModal,
+                    addTag,
+                    removeTag,
+                    saveBlog,
+                    confirmDelete,
+                    deleteBlog,
+                    formatDate
+                };
+            }
+        }).mount('#app');
+    </script>
 </body>
 </html>

@@ -19,6 +19,8 @@ func main() {
 	//systemLog.Test()
 	r := gin.Default()
 
+	r.LoadHTMLGlob("templates/*.html")
+
 	r.Use(routers.CORSMiddleware())
 	// r.Use(cors.Default())
 

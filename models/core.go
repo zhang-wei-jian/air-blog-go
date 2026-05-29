@@ -1,6 +1,9 @@
 package models
 
 import (
+	"os"
+
+	"github.com/glebarez/sqlite"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -10,18 +13,30 @@ var DB *gorm.DB
 var err error
 
 func init() {
-	// 参考 https://github.com/go-sql-driver/mysql#dsn-data-source-name 获取详情
-	//dsn := "root:1379@tcp(127.0.0.1:3306)/gin?charset=utf8mb4&parseTime=True&loc=Local"
-	dsn := "airBlog:137930@tcp(60.204.170.225)/airBlog?charset=utf8mb4&parseTime=True&loc=Local"
-	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),
-	})
-	if err != nil {
-		println(err)
+	dsn := os.Getenv("DB_DSN")
+
+	if dsn != "" {
+		// MySQL
+		DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
+			Logger: logger.Default.LogMode(logger.Info),
+		})
+	} else {
+		// SQLite (本地文件，无需额外配置)
+		DB, err = gorm.Open(sqlite.Open("airBlog.db"), &gorm.Config{
+			Logger: logger.Default.LogMode(logger.Info),
+		})
 	}
+
+	if err != nil {
+		panic("数据库连接失败: " + err.Error())
+	}
+
 	DB.AutoMigrate(&User{})
 	DB.AutoMigrate(&Catalog{})
 
-	println("数据库链接成功")
-
+	if dsn != "" {
+		println("已连接 MySQL 数据库")
+	} else {
+		println("已连接 SQLite (airBlog.db)")
+	}
 }

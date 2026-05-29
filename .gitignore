@@ -1,0 +1,15 @@
+# Database
+*.db
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+
+# Playwright
+.playwright-mcp/
+
+# Build
+tmp/
